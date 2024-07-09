@@ -35,6 +35,11 @@ func main() {
 
 	categoryController := controllers.CategoryController{DbPool: dbpool}
 
+	r.Get("/categories", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Hello World!"))
+	})
+
 	r.Route("/parcus/v1", func(r chi.Router) {
 		r.Use(internalMiddleware.JsonHeader)
 		r.Get("/categories", categoryController.Get)

@@ -1,37 +1,29 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 
 	"stardustcode/backend/internal/projects/parcus/models"
+	"stardustcode/backend/internal/projects/parcus/services"
 
-	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type CategoryController struct {
-	DbPool *pgxpool.Pool
+	Service *services.CategoryService
 }
 
 func (c *CategoryController) Get(w http.ResponseWriter, r *http.Request) {
-	query := `SELECT * 
-		FROM categories
-		ORDER BY id ASC
-	`
+	rawOutput, err := c.Service.Get()
 
-	output := []models.Category{}
-	err := pgxscan.Select(context.Background(), c.DbPool, &output, query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	data, err := json.Marshal(output)
+	output, err := json.Marshal(rawOutput)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -39,7 +31,7 @@ func (c *CategoryController) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(data))
+	w.Write([]byte(output))
 }
 
 func (c *CategoryController) Post(w http.ResponseWriter, r *http.Request) {
@@ -51,83 +43,46 @@ func (c *CategoryController) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := "INSERT INTO categories (emoji, name, category_type) VALUES (@emoji, @name, @category_type);"
-	args := pgx.NamedArgs{
-		"name":          payload.Name,
-		"user_id":       payload.UserId,
-		"emoji":         payload.Emoji,
-		"category_type": payload.CategoryType,
-	}
-
-	_, err = c.DbPool.Exec(context.Background(), query, args)
+	err = c.Service.Post(payload)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	data, err := json.Marshal(payload)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (c *CategoryController) Put(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
-	var payload models.Category
-
-	err := json.NewDecoder(r.Body).Decode(&payload)
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	query := `UPDATE categories 
-		SET user_id=@user_id, emoji=@emoji, name=@name, category_type=@category_type
-		WHERE id=@id
-	`
-
-	args := pgx.NamedArgs{
-		"id":            id,
-		"user_id":       payload.UserId,
-		"name":          payload.Name,
-		"emoji":         payload.Emoji,
-		"category_type": payload.CategoryType,
+	var payload models.Category
+	err = json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	_, err = c.DbPool.Exec(context.Background(), query, args)
+	err = c.Service.Put(id, payload)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	data, err := json.Marshal(payload)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (c *CategoryController) Delete(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
-
-	query := `DELETE FROM categories 
-		WHERE id=@id
-	`
-
-	args := pgx.NamedArgs{
-		"id": id,
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	_, err := c.DbPool.Exec(context.Background(), query, args)
+	err = c.Service.Delete(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

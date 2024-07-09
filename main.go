@@ -8,6 +8,7 @@ import (
 	"stardustcode/backend/internal/database"
 	internalMiddleware "stardustcode/backend/internal/middlewares"
 	"stardustcode/backend/internal/projects/parcus/controllers"
+	"stardustcode/backend/internal/projects/parcus/services"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -33,29 +34,43 @@ func main() {
 
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	categoryController := controllers.CategoryController{DbPool: dbpool}
+	accountService := services.AccountService{DbPool: dbpool}
+	categoryService := services.CategoryService{DbPool: dbpool}
+	transactionService := services.TransactionService{DbPool: dbpool}
+	recurringTransactionService := services.RecurringTransactionService{DbPool: dbpool}
 
-	r.Get("/categories", func(w http.ResponseWriter, r *http.Request) {
+	accountController := controllers.AccountController{Service: &accountService}
+	categoryController := controllers.CategoryController{Service: &categoryService}
+	transactionController := controllers.TransactionController{Service: &transactionService}
+	recurringTransactionController := controllers.RecurringTransactionController{Service: &recurringTransactionService}
+
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Hello World!"))
 	})
 
 	r.Route("/parcus/v1", func(r chi.Router) {
 		r.Use(internalMiddleware.JsonHeader)
+
+		r.Get("/accounts", accountController.Get)
+		r.Post("/accounts", accountController.Post)
+		r.Put("/accounts/{id}", accountController.Put)
+		r.Delete("/accounts/{id}", accountController.Delete)
+
 		r.Get("/categories", categoryController.Get)
 		r.Post("/categories", categoryController.Post)
 		r.Put("/categories/{id}", categoryController.Put)
 		r.Delete("/categories/{id}", categoryController.Delete)
-	})
 
-	transactionController := controllers.TransactionController{DbPool: dbpool}
-
-	r.Route("/parcus/v1", func(r chi.Router) {
-		r.Use(internalMiddleware.JsonHeader)
 		r.Get("/transactions", transactionController.Get)
 		r.Post("/transactions", transactionController.Post)
 		r.Put("/transactions/{id}", transactionController.Put)
 		r.Delete("/transactions/{id}", transactionController.Delete)
+
+		r.Get("/recurring_transactions", recurringTransactionController.Get)
+		r.Post("/recurring_transactions", recurringTransactionController.Post)
+		r.Put("/recurring_transactions/{id}", recurringTransactionController.Put)
+		r.Delete("/recurring_transactions/{id}", recurringTransactionController.Delete)
 	})
 
 	http.ListenAndServe(":3333", r)

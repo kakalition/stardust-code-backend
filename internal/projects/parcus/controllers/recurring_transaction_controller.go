@@ -11,11 +11,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type TransactionController struct {
-	Service *services.TransactionService
+type RecurringTransactionController struct {
+	Service *services.RecurringTransactionService
 }
 
-func (c *TransactionController) Get(w http.ResponseWriter, r *http.Request) {
+func (c *RecurringTransactionController) Get(w http.ResponseWriter, r *http.Request) {
 	output, err := c.Service.Get()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -23,6 +23,7 @@ func (c *TransactionController) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data, err := json.Marshal(output)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -32,8 +33,8 @@ func (c *TransactionController) Get(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(data))
 }
 
-func (c *TransactionController) Post(w http.ResponseWriter, r *http.Request) {
-	var payload models.Transaction
+func (c *RecurringTransactionController) Post(w http.ResponseWriter, r *http.Request) {
+	var payload models.RecurringTransaction
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -46,17 +47,24 @@ func (c *TransactionController) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data, err := json.Marshal(payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
+	w.Write(data)
 }
 
-func (c *TransactionController) Put(w http.ResponseWriter, r *http.Request) {
+func (c *RecurringTransactionController) Put(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	var payload models.Transaction
+	var payload models.RecurringTransaction
 	err = json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -69,10 +77,10 @@ func (c *TransactionController) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
 }
 
-func (c *TransactionController) Delete(w http.ResponseWriter, r *http.Request) {
+func (c *RecurringTransactionController) Delete(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

@@ -11,11 +11,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type TransactionController struct {
-	Service *services.TransactionService
+type AccountController struct {
+	Service *services.AccountService
 }
 
-func (c *TransactionController) Get(w http.ResponseWriter, r *http.Request) {
+func (c *AccountController) Get(w http.ResponseWriter, r *http.Request) {
 	output, err := c.Service.Get()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -32,8 +32,8 @@ func (c *TransactionController) Get(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(data))
 }
 
-func (c *TransactionController) Post(w http.ResponseWriter, r *http.Request) {
-	var payload models.Transaction
+func (c *AccountController) Post(w http.ResponseWriter, r *http.Request) {
+	var payload models.Account
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -49,14 +49,14 @@ func (c *TransactionController) Post(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (c *TransactionController) Put(w http.ResponseWriter, r *http.Request) {
+func (c *AccountController) Put(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	var payload models.Transaction
+	var payload models.Account
 	err = json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -72,7 +72,7 @@ func (c *TransactionController) Put(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (c *TransactionController) Delete(w http.ResponseWriter, r *http.Request) {
+func (c *AccountController) Delete(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

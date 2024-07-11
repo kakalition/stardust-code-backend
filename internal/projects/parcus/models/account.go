@@ -4,10 +4,10 @@ import "time"
 
 type Account struct {
 	Id          *int       `json:"id" db:"id"`
-	UserId      *string    `json:"user_id" db:"user_id"`
-	Emoji       *string    `json:"emoji" db:"emoji"`
-	Name        *string    `json:"name" db:"name"`
-	Balance     *float64   `json:"balance" db:"balance"`
-	CreatedDate *time.Time `json:"created_date" db:"created_date"`
-	UpdatedDate *time.Time `json:"updated_date" db:"updated_date"`
+	UserId      *string    `json:"userId" db:"user_id"`
+	Emoji       *string    `json:"emoji" db:"emoji" validate:"required"`
+	Name        *string    `json:"name" db:"name" validate:"required"`
+	Balance     *float64   `json:"balance" db:"balance" validate:"required"`
+	CreatedDate *time.Time `json:"createdDate" db:"createdDate" validate:"required"`
+	UpdatedDate *time.Time `json:"updatedDate" db:"updatedDate"`
 }

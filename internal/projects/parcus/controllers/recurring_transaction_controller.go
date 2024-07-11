@@ -9,10 +9,12 @@ import (
 	"stardustcode/backend/internal/projects/parcus/services"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 )
 
 type RecurringTransactionController struct {
-	Service *services.RecurringTransactionService
+	Service   *services.RecurringTransactionService
+	Validator *validator.Validate
 }
 
 func (c *RecurringTransactionController) Get(w http.ResponseWriter, r *http.Request) {

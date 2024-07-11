@@ -36,7 +36,6 @@ func (c *BudgetService) Post(payload models.Budget) error {
 	;`
 
 	args := pgx.NamedArgs{
-		"userId":     payload.UserId,
 		"categoryId": payload.CategoryId,
 		"amount":     payload.Amount,
 		"period":     payload.Period,
@@ -58,7 +57,6 @@ func (c *BudgetService) Put(id int, payload models.Budget) error {
 
 	args := pgx.NamedArgs{
 		"id":         id,
-		"userId":     payload.UserId,
 		"categoryId": payload.CategoryId,
 		"amount":     payload.Amount,
 		"period":     payload.Period,

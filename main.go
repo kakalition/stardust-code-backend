@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
 
@@ -34,15 +35,17 @@ func main() {
 
 	r.Use(middleware.Timeout(60 * time.Second))
 
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
 	accountService := services.AccountService{DbPool: dbpool}
 	categoryService := services.CategoryService{DbPool: dbpool}
 	transactionService := services.TransactionService{DbPool: dbpool}
 	recurringTransactionService := services.RecurringTransactionService{DbPool: dbpool}
 
-	accountController := controllers.AccountController{Service: &accountService}
-	categoryController := controllers.CategoryController{Service: &categoryService}
-	transactionController := controllers.TransactionController{Service: &transactionService}
-	recurringTransactionController := controllers.RecurringTransactionController{Service: &recurringTransactionService}
+	accountController := controllers.AccountController{Service: &accountService, Validator: validate}
+	categoryController := controllers.CategoryController{Service: &categoryService, Validator: validate}
+	transactionController := controllers.TransactionController{Service: &transactionService, Validator: validate}
+	recurringTransactionController := controllers.RecurringTransactionController{Service: &recurringTransactionService, Validator: validate}
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

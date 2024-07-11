@@ -9,10 +9,12 @@ import (
 	"stardustcode/backend/internal/projects/parcus/services"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 )
 
 type CategoryController struct {
-	Service *services.CategoryService
+	Service   *services.CategoryService
+	Validator *validator.Validate
 }
 
 func (c *CategoryController) Get(w http.ResponseWriter, r *http.Request) {
@@ -37,14 +39,17 @@ func (c *CategoryController) Get(w http.ResponseWriter, r *http.Request) {
 func (c *CategoryController) Post(w http.ResponseWriter, r *http.Request) {
 	var payload models.Category
 
-	err := json.NewDecoder(r.Body).Decode(&payload)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = c.Service.Post(payload)
-	if err != nil {
+	if err := c.Validator.Struct(payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := c.Service.Post(payload); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -60,14 +65,13 @@ func (c *CategoryController) Put(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload models.Category
-	err = json.NewDecoder(r.Body).Decode(&payload)
-	if err != nil {
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = c.Service.Put(id, payload)
-	if err != nil {
+	if err := c.Service.Put(id, payload); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

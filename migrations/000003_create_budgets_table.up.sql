@@ -1,7 +1,7 @@
-CREATE TABLE IF NOT EXISTS accounts (
+CREATE TABLE IF NOT EXISTS budgets (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER,
-  category_id INTEGER,
+  userId INTEGER,
+  categoryId INTEGER,
   amount NUMERIC,
   period DATE
 );

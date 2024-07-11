@@ -1,12 +1,12 @@
 CREATE TABLE IF NOT EXISTS transactions (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER,
+  userId INTEGER,
   date TIMESTAMP,
-  wallet_id INTEGER,
-  category_id INTEGER,
+  walletId INTEGER,
+  categoryId INTEGER,
   amount NUMERIC,
   notes VARCHAR,
-  is_recurring BOOLEAN,
-  created_date TIMESTAMP,
-  updated_date TIMESTAMP
+  isRecurring BOOLEAN,
+  createdDate TIMESTAMP,
+  updatedDate TIMESTAMP
 );

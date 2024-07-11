@@ -6,15 +6,15 @@ import (
 
 type RecurringTransaction struct {
 	Id                  *int       `json:"id" db:"id"`
-	UserId              *int       `json:"user_id" db:"user_id"`
-	Name                *string    `json:"name" db:"name"`
-	Frequency           *string    `json:"frequency" db:"frequency"`
-	StartDate           *time.Time `json:"start_date" db:"start_date"`
-	NextDueDate         *time.Time `json:"next_due_date" db:"next_due_date"`
-	CategoryId          *int       `json:"category_id" db:"category_id"`
-	DeductFromAccountId *int       `json:"deduct_from_account_id" db:"deduct_from_account_id"`
-	Amount              *float64   `json:"amount" db:"amount"`
-	Notes               *string    `json:"notes" db:"notes"`
-	CreatedDate         *time.Time `json:"created_date" db:"created_date"`
-	UpdatedDate         *time.Time `json:"updated_date" db:"updated_date"`
+	UserId              *int       `json:"userId" db:"userId"`
+	Name                *string    `json:"name" db:"name" validate:"required"`
+	Frequency           *string    `json:"frequency" db:"frequency" validate:"required"`
+	StartDate           *time.Time `json:"startDate" db:"startDate" validate:"required"`
+	NextDueDate         *time.Time `json:"nextDueDate" db:"nextDueDate" validate:"required"`
+	CategoryId          *int       `json:"categoryId" db:"categoryId" validate:"required"`
+	DeductFromAccountId *int       `json:"deductFromAccountId" db:"deductFromAccountId" validate:"required"`
+	Amount              *float64   `json:"amount" db:"amount" validate:"required"`
+	Notes               *string    `json:"notes" db:"notes" validate:"required"`
+	CreatedDate         *time.Time `json:"createdDate" db:"createdDate" validate:"required"`
+	UpdatedDate         *time.Time `json:"updatedDate" db:"updatedDate"`
 }

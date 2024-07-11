@@ -9,10 +9,12 @@ import (
 	"stardustcode/backend/internal/projects/parcus/services"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 )
 
 type AccountController struct {
-	Service *services.AccountService
+	Service   *services.AccountService
+	Validator *validator.Validate
 }
 
 func (c *AccountController) Get(w http.ResponseWriter, r *http.Request) {

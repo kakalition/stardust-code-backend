@@ -9,10 +9,12 @@ import (
 	"stardustcode/backend/internal/projects/parcus/services"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 )
 
 type TransactionController struct {
-	Service *services.TransactionService
+	Service   *services.TransactionService
+	Validator *validator.Validate
 }
 
 func (c *TransactionController) Get(w http.ResponseWriter, r *http.Request) {

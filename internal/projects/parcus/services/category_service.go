@@ -37,7 +37,6 @@ func (c *CategoryService) Post(payload models.Category) error {
 
 	args := pgx.NamedArgs{
 		"name":         payload.Name,
-		"userId":       payload.UserId,
 		"emoji":        payload.Emoji,
 		"categoryType": payload.CategoryType,
 	}

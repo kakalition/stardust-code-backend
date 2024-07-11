@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"stardustcode/backend/internal/database"
@@ -13,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 )
 
@@ -37,11 +39,15 @@ func main() {
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
+	store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+
+	authService := services.AuthService{DbPool: dbpool, Store: store}
 	accountService := services.AccountService{DbPool: dbpool}
 	categoryService := services.CategoryService{DbPool: dbpool}
 	transactionService := services.TransactionService{DbPool: dbpool}
 	recurringTransactionService := services.RecurringTransactionService{DbPool: dbpool}
 
+	AuthController := controllers.AuthController{Service: &authService, Validator: validate, Store: store}
 	accountController := controllers.AccountController{Service: &accountService, Validator: validate}
 	categoryController := controllers.CategoryController{Service: &categoryService, Validator: validate}
 	transactionController := controllers.TransactionController{Service: &transactionService, Validator: validate}
@@ -54,6 +60,9 @@ func main() {
 
 	r.Route("/parcus/v1", func(r chi.Router) {
 		r.Use(internalMiddleware.JsonHeader)
+
+		r.Post("/login", AuthController.Login)
+		r.Post("/logout", AuthController.Logout)
 
 		r.Get("/accounts", accountController.Get)
 		r.Post("/accounts", accountController.Post)

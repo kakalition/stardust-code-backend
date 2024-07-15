@@ -1,9 +1,10 @@
 CREATE TABLE IF NOT EXISTS accounts (
-  id SERIAL PRIMARY KEY,
-  userId INTEGER,
+  id VARCHAR PRIMARY KEY,
+  user_id VARCHAR,
+  local_id VARCHAR,
   emoji VARCHAR,
   name VARCHAR,
   balance NUMERIC,
-  createdDate TIMESTAMP,
-  updatedDate TIMESTAMP
+  created_date TIMESTAMP,
+  updated_date TIMESTAMP
 );

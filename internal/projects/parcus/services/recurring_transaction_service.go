@@ -2,11 +2,11 @@ package services
 
 import (
 	"context"
-	"time"
 
 	"stardustcode/backend/internal/projects/parcus/models"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -15,14 +15,19 @@ type RecurringTransactionService struct {
 	DbPool *pgxpool.Pool
 }
 
-func (c *RecurringTransactionService) Get() ([]models.RecurringTransaction, error) {
+func (c *RecurringTransactionService) Get(userId string) ([]models.RecurringTransaction, error) {
 	query := `SELECT * 
 		FROM recurring_transactions
+		WHERE user_id = @userId
 		ORDER BY id ASC
 	`
 
+	args := pgx.NamedArgs{
+		"userId": userId,
+	}
+
 	output := []models.RecurringTransaction{}
-	err := pgxscan.Select(context.Background(), c.DbPool, &output, query)
+	err := pgxscan.Select(context.Background(), c.DbPool, &output, query, args)
 	if err != nil {
 		return []models.RecurringTransaction{}, nil
 	}
@@ -30,14 +35,16 @@ func (c *RecurringTransactionService) Get() ([]models.RecurringTransaction, erro
 	return output, nil
 }
 
-func (c *RecurringTransactionService) Post(payload models.RecurringTransaction) error {
+func (c *RecurringTransactionService) Post(userId string, payload models.RecurringTransaction) error {
 	query := `INSERT INTO 
-		categories (user_id, name, frequency, start_date, next_due_date, category_id, deduct_from_account_id, amount, notes, created_date)
-		VALUES (@userId, @name, @frequency, @startDate, @nextDueDate, @categoryId, @deductFromAccountId, @amount, @notes, @createdDate)
+		categories (id, local_id, user_id, name, frequency, start_date, next_due_date, category_id, deduct_from_account_id, amount, notes, created_date)
+		VALUES (@id, @localId, @userId, @name, @frequency, @startDate, @nextDueDate, @categoryId, @deductFromAccountId, @amount, @notes, @createdDate)
 	;`
 
 	args := pgx.NamedArgs{
-		"userId":              payload.UserId,
+		"id":                  uuid.NewString(),
+		"userId":              userId,
+		"localId":             payload.LocalId,
 		"name":                payload.Name,
 		"frequency":           payload.Frequency,
 		"startDate":           payload.StartDate,
@@ -46,7 +53,7 @@ func (c *RecurringTransactionService) Post(payload models.RecurringTransaction) 
 		"deductFromAccountId": payload.DeductFromAccountId,
 		"amount":              payload.Amount,
 		"notes":               payload.Notes,
-		"createdDate":         time.Now(),
+		"createdDate":         payload.CreatedDate.Time,
 	}
 
 	_, err := c.DbPool.Exec(context.Background(), query, args)
@@ -57,7 +64,7 @@ func (c *RecurringTransactionService) Post(payload models.RecurringTransaction) 
 	return nil
 }
 
-func (c *RecurringTransactionService) Put(id int, payload models.RecurringTransaction) error {
+func (c *RecurringTransactionService) Put(id string, payload models.RecurringTransaction) error {
 	query := `UPDATE recurring_transactions
 		SET name=@name, frequency=@frequency, start_date=@startDate, next_due_date=@nextDueDate, 
 			category_id=@categoryId, deduct_from_account_id=@deductFromAccountId, amount=@amount, 
@@ -74,7 +81,7 @@ func (c *RecurringTransactionService) Put(id int, payload models.RecurringTransa
 		"deductFromAccountId": payload.DeductFromAccountId,
 		"amount":              payload.Amount,
 		"notes":               payload.Notes,
-		"updatedDate":         time.Now(),
+		"updatedDate":         payload.UpdatedDate.Time,
 	}
 
 	_, err := c.DbPool.Exec(context.Background(), query, args)
@@ -85,7 +92,7 @@ func (c *RecurringTransactionService) Put(id int, payload models.RecurringTransa
 	return nil
 }
 
-func (c *RecurringTransactionService) Delete(id int) error {
+func (c *RecurringTransactionService) Delete(id string) error {
 	query := `DELETE FROM recurring_transactions 
 		WHERE id=@id
 	;`

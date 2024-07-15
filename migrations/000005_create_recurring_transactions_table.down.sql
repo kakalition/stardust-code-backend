@@ -1,1 +1,1 @@
-DELETE TABLE IF EXISTS recurring_transactions;
+DROP TABLE IF EXISTS recurring_transactions;

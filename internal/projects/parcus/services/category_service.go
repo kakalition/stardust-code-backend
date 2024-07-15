@@ -6,6 +6,7 @@ import (
 	"stardustcode/backend/internal/projects/parcus/models"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -14,14 +15,19 @@ type CategoryService struct {
 	DbPool *pgxpool.Pool
 }
 
-func (c *CategoryService) Get() ([]models.Category, error) {
+func (c *CategoryService) Get(userId string) ([]models.Category, error) {
 	query := `SELECT * 
 		FROM categories
+		WHERE user_id = @userId
 		ORDER BY id ASC
 	;`
 
+	args := pgx.NamedArgs{
+		"userId": userId,
+	}
+
 	output := []models.Category{}
-	err := pgxscan.Select(context.Background(), c.DbPool, &output, query)
+	err := pgxscan.Select(context.Background(), c.DbPool, &output, query, args)
 	if err != nil {
 		return []models.Category{}, err
 	}
@@ -29,16 +35,19 @@ func (c *CategoryService) Get() ([]models.Category, error) {
 	return output, nil
 }
 
-func (c *CategoryService) Post(payload models.Category) error {
+func (c *CategoryService) Post(userId string, payload models.Category) error {
 	query := `INSERT INTO 
-		categories (user_id, emoji, name, category_type) 
-		VALUES (@userId, @emoji, @name, @categoryType)
+		categories (id, local_id, user_id, emoji, name, category_type) 
+		VALUES (@id, @localId, @userId, @emoji, @name, @categoryType)
 	;`
 
 	args := pgx.NamedArgs{
+		"id":           uuid.NewString(),
+		"localId":      payload.LocalId,
 		"name":         payload.Name,
 		"emoji":        payload.Emoji,
 		"categoryType": payload.CategoryType,
+		"userId":       userId,
 	}
 
 	_, err := c.DbPool.Exec(context.Background(), query, args)
@@ -49,7 +58,7 @@ func (c *CategoryService) Post(payload models.Category) error {
 	return nil
 }
 
-func (c *CategoryService) Put(id int, payload models.Category) error {
+func (c *CategoryService) Put(id string, payload models.Category) error {
 	query := `UPDATE categories 
 		SET emoji=@emoji, name=@name, category_type=@categoryType
 		WHERE id=@id
@@ -70,7 +79,7 @@ func (c *CategoryService) Put(id int, payload models.Category) error {
 	return nil
 }
 
-func (c *CategoryService) Delete(id int) error {
+func (c *CategoryService) Delete(id string) error {
 	query := `DELETE FROM categories 
 		WHERE id=@id
 	;`

@@ -3,10 +3,11 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"stardustcode/backend/internal/projects/parcus/models"
 	"stardustcode/backend/internal/projects/parcus/services"
+	"stardustcode/backend/internal/types"
+	"stardustcode/backend/internal/utils"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
@@ -18,13 +19,20 @@ type RecurringTransactionController struct {
 }
 
 func (c *RecurringTransactionController) Get(w http.ResponseWriter, r *http.Request) {
-	output, err := c.Service.Get()
+	ctx := r.Context()
+	user := ctx.Value(types.SessionUserKey).(*models.NetworkUser)
+
+	rawOutput, err := c.Service.Get(*user.Id)
+	transformedRawOutput := utils.Map(rawOutput, func(local models.RecurringTransaction) models.NetworkRecurringTransaction {
+		return local.ToNetwork()
+	})
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	data, err := json.Marshal(output)
+	data, err := json.Marshal(transformedRawOutput)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -36,14 +44,17 @@ func (c *RecurringTransactionController) Get(w http.ResponseWriter, r *http.Requ
 }
 
 func (c *RecurringTransactionController) Post(w http.ResponseWriter, r *http.Request) {
-	var payload models.RecurringTransaction
+	ctx := r.Context()
+	user := ctx.Value(types.SessionUserKey).(*models.NetworkUser)
+
+	var payload models.NetworkRecurringTransaction
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = c.Service.Post(payload)
+	err = c.Service.Post(*user.Id, payload.ToInternal())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -60,20 +71,16 @@ func (c *RecurringTransactionController) Post(w http.ResponseWriter, r *http.Req
 }
 
 func (c *RecurringTransactionController) Put(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	id := chi.URLParam(r, "id")
+
+	var payload models.NetworkRecurringTransaction
+	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	var payload models.RecurringTransaction
-	err = json.NewDecoder(r.Body).Decode(&payload)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	err = c.Service.Put(id, payload)
+	err = c.Service.Put(id, payload.ToInternal())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -83,13 +90,9 @@ func (c *RecurringTransactionController) Put(w http.ResponseWriter, r *http.Requ
 }
 
 func (c *RecurringTransactionController) Delete(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	id := chi.URLParam(r, "id")
 
-	err = c.Service.Delete(id)
+	err := c.Service.Delete(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

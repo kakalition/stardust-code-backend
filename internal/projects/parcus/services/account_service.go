@@ -6,6 +6,7 @@ import (
 	"stardustcode/backend/internal/projects/parcus/models"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -14,14 +15,19 @@ type AccountService struct {
 	DbPool *pgxpool.Pool
 }
 
-func (c *AccountService) Get() ([]models.Account, error) {
+func (c *AccountService) Get(userId string) ([]models.Account, error) {
 	query := `SELECT * 
 		FROM accounts
+		WHERE user_id = @userId
 		ORDER BY id ASC
 	;`
 
+	args := pgx.NamedArgs{
+		"userId": userId,
+	}
+
 	output := []models.Account{}
-	err := pgxscan.Select(context.Background(), c.DbPool, &output, query)
+	err := pgxscan.Select(context.Background(), c.DbPool, &output, query, args)
 	if err != nil {
 		return []models.Account{}, err
 	}
@@ -29,18 +35,20 @@ func (c *AccountService) Get() ([]models.Account, error) {
 	return output, nil
 }
 
-func (c *AccountService) Post(payload models.Account) error {
+func (c *AccountService) Post(userId string, payload models.Account) error {
 	query := `INSERT INTO 
-		accounts (user_id, emoji, name, balance, created_date) 
-		VALUES (@userId, @emoji, @name, @balance, @createdDate)
+		accounts (id, local_id, user_id, emoji, name, balance, created_date) 
+		VALUES (@id, @localId, @userId, @emoji, @name, @balance, @createdDate)
 	;`
 
 	args := pgx.NamedArgs{
-		"userId":      payload.UserId,
+		"id":          uuid.NewString(),
+		"userId":      userId,
+		"localId":     payload.LocalId,
 		"emoji":       payload.Emoji,
 		"name":        payload.Name,
 		"balance":     payload.Balance,
-		"createdDate": payload.CreatedDate,
+		"createdDate": payload.CreatedDate.Time,
 	}
 
 	_, err := c.DbPool.Exec(context.Background(), query, args)
@@ -51,19 +59,18 @@ func (c *AccountService) Post(payload models.Account) error {
 	return nil
 }
 
-func (c *AccountService) Put(id int, payload models.Account) error {
+func (c *AccountService) Put(id string, payload models.Account) error {
 	query := `UPDATE accounts 
-		SET user_id=@user_id, emoji=@emoji, name=@name, balance=@balance, updated_date=@updatedDate
+		SET emoji=@emoji, name=@name, balance=@balance, updated_date=@updatedDate
 		WHERE id=@id
 	;`
 
 	args := pgx.NamedArgs{
 		"id":          id,
-		"userId":      payload.UserId,
 		"name":        payload.Name,
 		"emoji":       payload.Emoji,
 		"balance":     payload.Balance,
-		"updatedDate": payload.UpdatedDate,
+		"updatedDate": payload.UpdatedDate.Time,
 	}
 
 	_, err := c.DbPool.Exec(context.Background(), query, args)
@@ -74,7 +81,7 @@ func (c *AccountService) Put(id int, payload models.Account) error {
 	return nil
 }
 
-func (c *AccountService) Delete(id int) error {
+func (c *AccountService) Delete(id string) error {
 	query := `DELETE FROM accounts 
 		WHERE id=@id
 	;`
